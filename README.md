@@ -69,18 +69,75 @@ Key packages used in this project:
 | `uuid` | Generating unique IDs for vault entries. |
 | `json_serializable` | JSON code generation for models. |
 
-## Getting Started
+## 📥 Installation
 
-1.  **Prerequisites**: Ensure you have Flutter SDK installed (`flutter doctor`).
+### **Download Pre-built Apps**
+
+**🎯 Recommended for End Users:**
+
+Visit the [**Releases Page**](https://github.com/Johndenisnyagah/Password-Manager/releases) to download the latest version for your platform:
+
+- **📱 Android**: Download `app-release.apk` 
+  - Enable "Install from Unknown Sources" in your device settings
+  - Open the APK file and follow installation prompts
+  
+- **🌐 Web App**: [**Try PassM Online**](https://johndenisnyagah.github.io/Password-Manager/) *(Coming Soon)*
+  - No installation required - runs directly in your browser
+  - Works on any device with a modern web browser
+
+- **💻 Windows**: Download `PassM-Windows.zip` *(Coming Soon)*
+  - Extract the ZIP file
+  - Run `passm.exe`
+
+- **🍎 iOS/macOS**: Not yet available (requires Apple Developer account)
+
+---
+
+## 🛠️ Developer Setup (Build from Source)
+
+### **Prerequisites**
+- Flutter SDK 3.0+ ([Install Flutter](https://docs.flutter.dev/get-started/install))
+- Run `flutter doctor` to verify setup
+
+### **Build Instructions**
+
+1.  **Clone the Repository**:
+    ```bash
+    git clone https://github.com/Johndenisnyagah/Password-Manager.git
+    cd Password-Manager
+    ```
+
 2.  **Install Dependencies**:
     ```bash
     flutter pub get
     ```
-3.  **Run the App**:
+
+3.  **Run in Development Mode**:
     ```bash
-    flutter run
+    # Web
+    flutter run -d chrome
+    
+    # Android (requires Android device/emulator)
+    flutter run -d android
+    
+    # Windows
+    flutter run -d windows
     ```
-    *   *Note*: For Web, ensure you use `flutter run -d chrome`.
+
+4.  **Build Release Version**:
+    ```bash
+    # Android APK
+    flutter build apk --release
+    # Output: build/app/outputs/flutter-apk/app-release.apk
+    
+    # Web
+    flutter build web --release
+    # Output: build/web/
+    
+    # Windows (requires Developer Mode enabled)
+    flutter build windows --release
+    # Output: build/windows/x64/runner/Release/
+    ```
 
 ## Project Structure
 
