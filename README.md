@@ -1,5 +1,7 @@
 # PassM - Secure Password Manager
 
+> 🤖 **AI-Assisted Development**: This project was developed with the assistance of GitHub Copilot AI, which helped with code generation, debugging, architecture decisions, and best practices implementation.
+
 A modern, secure, and hybrid password manager built with Flutter. PassM prioritizes security with client-side encryption while offering a premium user experience with smooth animations and intuitive design.
 
 > ⚠️ **Development Status**: This project is currently in active development and is **NOT production-ready**. Use at your own risk. Do not use this as your primary password manager until a stable release is announced.
