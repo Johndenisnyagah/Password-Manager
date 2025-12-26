@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -340,11 +338,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   : null,
                             ),
                             child: ref.watch(profilePhotoProvider) == null
-                                ? ClipOval(
-                                    child: Lottie.asset(
-                                      'assets/animations/profile.json',
-                                      fit: BoxFit.cover,
-                                    ),
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 80,
+                                    color: AppColors.deepPurple,
                                   )
                                 : null,
                           ),

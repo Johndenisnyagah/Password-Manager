@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:passm/features/vault/domain/services/vault_manager.dart';
-import 'package:passm/features/vault/domain/models/vault_entry.dart';
 import 'package:passm/core/services/secure_storage_service.dart';
 import 'package:passm/core/crypto/crypto_service.dart';
 

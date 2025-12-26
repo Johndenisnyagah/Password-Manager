@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/service_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/utils/password_generator.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../widgets/password_generator_dialog.dart';
 

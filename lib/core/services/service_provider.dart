@@ -7,15 +7,6 @@ import '../services/clipboard_service.dart';
 import '../services/pwned_service.dart';
 import '../services/biometric_service.dart';
 
-import 'package:flutter/material.dart';
-import '../../features/auth/domain/services/auth_service.dart';
-import '../../features/vault/domain/services/vault_manager.dart';
-import '../../features/totp/domain/services/totp_service.dart';
-import '../services/secure_storage_service.dart';
-import '../services/clipboard_service.dart';
-import '../services/pwned_service.dart';
-import '../services/biometric_service.dart';
-
 /// A service provider widget that uses [InheritedWidget] for dependency injection.
 ///
 /// This widget holds instances of core and feature services and makes them

@@ -26,9 +26,6 @@ class _PasswordGeneratorDialogState extends State<PasswordGeneratorDialog> {
   bool _includeNumbers = true;
   bool _includeSymbols = true;
   
-  // Note: Unused field kept for future use if "exclude similar" is implemented.
-  bool _excludeSimilar = false; 
-  
   late String _generatedPassword;
 
   @override
