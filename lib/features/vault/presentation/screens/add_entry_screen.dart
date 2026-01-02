@@ -3,7 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/service_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/password_validator.dart';
-import '../widgets/password_generator_dialog.dart';
+import '../screens/generator_screen.dart';
 
 import '../../domain/models/vault_entry.dart';
 
@@ -61,9 +61,12 @@ class _AddEntryScreenState extends ConsumerState<AddEntryScreen> {
   }
 
   Future<void> _generatePassword() async {
-    final password = await showDialog<String>(
-      context: context,
-      builder: (_) => const PasswordGeneratorDialog(),
+    final password = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const GeneratorScreen(),
+        fullscreenDialog: true,
+      ),
     );
     
     if (password != null) {
@@ -176,6 +179,7 @@ class _AddEntryScreenState extends ConsumerState<AddEntryScreen> {
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _usernameController,
+                              autofillHints: const [AutofillHints.username],
                               decoration: const InputDecoration(
                                 labelText: 'Username / Email',
                                 hintText: 'user@example.com',
@@ -199,6 +203,7 @@ class _AddEntryScreenState extends ConsumerState<AddEntryScreen> {
                             TextFormField(
                               controller: _passwordController,
                               obscureText: _obscurePassword,
+                              autofillHints: const [AutofillHints.password],
                               decoration: InputDecoration(
                                 labelText: 'Password (optional)',
                                 prefixIcon: const Icon(Icons.lock_outline_rounded),
@@ -311,7 +316,7 @@ class _AddEntryScreenState extends ConsumerState<AddEntryScreen> {
                                     fontSize: 14,
                                   ),
                                 ),
-                                activeColor: AppColors.deepPurple,
+                                activeThumbColor: AppColors.deepPurple,
                                 contentPadding: EdgeInsets.zero,
                               ),
                             ],
@@ -365,7 +370,7 @@ class _AddEntryScreenState extends ConsumerState<AddEntryScreen> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),

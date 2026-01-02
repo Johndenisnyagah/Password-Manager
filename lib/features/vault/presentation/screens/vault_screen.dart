@@ -113,7 +113,7 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Have a nice day',
+                            'Everything important — safely encrypted',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
@@ -156,9 +156,9 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.deepPurple.withOpacity(0.1),
+                        color: AppColors.deepPurple.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.deepPurple.withOpacity(0.2)),
+                        border: Border.all(color: AppColors.deepPurple.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         children: [
@@ -340,7 +340,7 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: AppColors.deepPurple.withOpacity(0.3),
+                    color: AppColors.deepPurple.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -409,23 +409,25 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
     await ref.read(vaultManagerProvider).updateEntry(updatedEntry);
     if (mounted) setState(() {});
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${entry.serviceName} archived'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () async {
-            final revertedEntry = updatedEntry.copyWith(isArchived: false);
-            await ref.read(vaultManagerProvider).updateEntry(revertedEntry);
-            if (mounted) setState(() {});
-          },
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${entry.serviceName} archived'),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () async {
+              final revertedEntry = updatedEntry.copyWith(isArchived: false);
+              await ref.read(vaultManagerProvider).updateEntry(revertedEntry);
+              if (mounted) setState(() {});
+            },
+          ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
+      );
+    }
   }
 
   /// Permanently deletes an entry from the vault.
@@ -433,14 +435,16 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
     await ref.read(vaultManagerProvider).deleteEntry(entry.id);
     if (mounted) setState(() {});
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${entry.serviceName} deleted'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${entry.serviceName} deleted'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 }

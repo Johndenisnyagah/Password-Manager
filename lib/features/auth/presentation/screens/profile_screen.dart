@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,6 +28,8 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   String _username = 'User';
   final ImagePicker _picker = ImagePicker();
+  bool _biometricsEnabled = false;
+  bool _isBiometricsAvailable = false;
 
   @override
   void initState() {
@@ -37,13 +40,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   /// Loads the user's profile data (username) from secure storage.
   Future<void> _loadProfileData() async {
     final storageService = ref.read(storageServiceProvider);
+    final bioService = ref.read(biometricServiceProvider);
+    
     final username = await storageService.loadUsername();
+    final isEnabled = await storageService.loadBiometricsEnabled();
+    final isAvailable = await bioService.isAvailable();
 
     if (mounted) {
       setState(() {
         if (username != null && username.isNotEmpty) {
           _username = username;
         }
+        _biometricsEnabled = isEnabled;
+        _isBiometricsAvailable = isAvailable;
       });
     }
   }
@@ -94,20 +103,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       
       await Clipboard.setData(ClipboardData(text: jsonString));
       
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Encrypted vault backup copied to clipboard! Save this securely.'),
-            duration: Duration(seconds: 4),
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Encrypted vault backup copied to clipboard! Save this securely.'),
+          duration: Duration(seconds: 4),
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Export failed: $e')),
+      );
     }
   }
 
@@ -119,7 +126,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Import Vault'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -142,7 +149,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -160,19 +167,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 final storageService = ref.read(storageServiceProvider);
                 await storageService.saveVault(controller.text);
                 
-                if (mounted) Navigator.pop(context);
+                if (!mounted) return;
+                Navigator.pop(dialogContext);
                 
                 // Force logout
                 final vaultManager = ref.read(vaultManagerProvider);
                 final authService = ref.read(authServiceProvider);
                 vaultManager.lock();
                 authService.logout();
-                Navigator.of(context).popUntil((route) => route.isFirst);
-                
+                // Show success message before popping to ensure context is valid
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Vault imported. Please login with the backup\'s password.')),
                 );
+                
+                Navigator.of(context).popUntil((route) => route.isFirst);
               } catch (e) {
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Import failed: $e')),
                 );
@@ -206,37 +216,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       builder: (context) => SimpleDialog(
         title: const Text('Select Theme'),
         children: [
-          RadioListTile<ThemeMode>(
-            title: const Text('Light'),
+          _buildRadioItem(
+            context,
+            title: 'Light',
             value: ThemeMode.light,
             groupValue: currentTheme,
             onChanged: (val) {
-              if (val != null) {
-                ref.read(themeProvider.notifier).setTheme(val);
-                Navigator.pop(context);
-              }
+              ref.read(themeProvider.notifier).setTheme(val);
+              Navigator.pop(context);
             },
           ),
-          RadioListTile<ThemeMode>(
-            title: const Text('Dark'),
+          _buildRadioItem(
+            context,
+            title: 'Dark',
             value: ThemeMode.dark,
             groupValue: currentTheme,
             onChanged: (val) {
-              if (val != null) {
-                ref.read(themeProvider.notifier).setTheme(val);
-                Navigator.pop(context);
-              }
+              ref.read(themeProvider.notifier).setTheme(val);
+              Navigator.pop(context);
             },
           ),
-          RadioListTile<ThemeMode>(
-            title: const Text('System Default'),
+          _buildRadioItem(
+            context,
+            title: 'System Default',
             value: ThemeMode.system,
             groupValue: currentTheme,
             onChanged: (val) {
-              if (val != null) {
-                ref.read(themeProvider.notifier).setTheme(val);
-                Navigator.pop(context);
-              }
+              ref.read(themeProvider.notifier).setTheme(val);
+              Navigator.pop(context);
             },
           ),
         ],
@@ -254,19 +261,88 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       builder: (context) => SimpleDialog(
         title: const Text('Auto-Lock Timer'),
         children: [1, 5, 15, 30, 60].map((min) {
-          return RadioListTile<int>(
-            title: Text('$min minutes'),
+
+          return _buildRadioItem(
+            context,
+            title: '$min minutes',
             value: min,
             groupValue: currentMinutes,
             onChanged: (val) {
-              if (val != null) {
-                vaultManager.autoLockDuration = Duration(minutes: val);
-                Navigator.pop(context);
-                setState(() {});
-              }
+              vaultManager.autoLockDuration = Duration(minutes: val);
+              Navigator.pop(context);
+              setState(() {});
             },
           );
         }).toList(),
+      ),
+    );
+  }
+
+  /// Toggles biometric unlock status.
+  /// 
+  /// If enabling, prompts for master password to wrap the key.
+  Future<void> _toggleBiometrics(bool enabled) async {
+    if (!enabled) {
+      final vaultManager = ref.read(vaultManagerProvider);
+      await vaultManager.disableBiometricUnlock();
+      setState(() => _biometricsEnabled = false);
+      return;
+    }
+
+    // Enabling requires master password
+    final password = await _showPasswordConfirmationDialog();
+    if (password != null) {
+      try {
+        final vaultManager = ref.read(vaultManagerProvider);
+        await vaultManager.enableBiometricUnlock(password);
+        setState(() => _biometricsEnabled = true);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Biometric unlock enabled!')),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to enable: ${e.toString().replaceAll('Exception: ', '')}')),
+        );
+      }
+    }
+  }
+
+  /// Prompts the user to enter their master password for confirmation.
+  Future<String?> _showPasswordConfirmationDialog() async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Master Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter your master password to enable biometric unlock.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              obscureText: true,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Master Password',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (val) => Navigator.pop(context, val),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Confirm'),
+          ),
+        ],
       ),
     );
   }
@@ -279,7 +355,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final autoLockMins = vaultManager.autoLockDuration.inMinutes;
 
     return Scaffold(
-      backgroundColor: AppColors.deepPurple,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -290,29 +366,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    icon: const Icon(Icons.arrow_back, color: AppColors.deepPurple),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     'Profile',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: AppColors.deepPurple,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
             ),
 
-            // White Content Area
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
                       // Profile Avatar
@@ -323,7 +393,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             height: 140,
                             decoration: BoxDecoration(
                               color: Theme.of(context).brightness == Brightness.dark 
-                                  ? AppColors.deepPurple.withOpacity(0.2) 
+                                  ? AppColors.deepPurple.withValues(alpha: 0.2) 
                                   : AppColors.palePurple,
                               shape: BoxShape.circle,
                               border: Border.all(
@@ -362,7 +432,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(alpha: 0.2),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -459,29 +529,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             subtitle: '$autoLockMins minutes',
                             onTap: () => _handleAutoLock(context),
                           ),
-                          const Divider(height: 1),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildSectionCard(
+                        context,
+                        title: '',
+                        children: [
                           _buildSettingTile(
                             icon: Icons.fingerprint_rounded,
                             title: 'Biometric Unlock',
-                            subtitle: 'Use FaceID / Fingerprint',
-                            trailing: Switch(
-                              value: true, // Mocked for now as we don't have a settings persistence yet
-                              onChanged: (value) async {
-                                final bioService = ref.read(biometricServiceProvider);
-                                final available = await bioService.isAvailable();
-                                if (!available) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Biometrics not available on this device')),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Biometric settings updated')),
-                                  );
-                                }
-                              },
-                              activeColor: AppColors.deepPurple,
-                            ),
-                            onTap: () {},
+                            subtitle: _isBiometricsAvailable 
+                                ? 'Use FaceID / Fingerprint' 
+                                : 'Not available on this device',
+                            trailing: _isBiometricsAvailable 
+                              ? Switch(
+                                value: _biometricsEnabled,
+                                onChanged: (value) => _toggleBiometrics(value),
+                                activeThumbColor: AppColors.deepPurple,
+                              )
+                              : const Icon(Icons.error_outline, color: Colors.grey),
+                            onTap: _isBiometricsAvailable 
+                                ? () => _toggleBiometrics(!_biometricsEnabled) 
+                                : () {},
                           ),
                         ],
                       ),
@@ -498,7 +568,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             subtitle: 'Copy encrypted backup',
                             onTap: () => _handleExportVault(context),
                           ),
-                          const Divider(height: 1),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildSectionCard(
+                        context,
+                        title: '',
+                        children: [
                           _buildSettingTile(
                             icon: Icons.cloud_download_outlined,
                             title: 'Import Vault',
@@ -522,7 +598,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             Navigator.of(context).popUntil((route) => route.isFirst);
                           },
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.red, width: 2),
+                            side: const BorderSide(color: AppColors.deepPurple, width: 2),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -530,7 +606,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: const Text(
                             'Logout',
                             style: TextStyle(
-                              color: Colors.red,
+                              color: AppColors.deepPurple,
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
                             ),
@@ -548,8 +624,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
         ),
       ),
     );
@@ -568,7 +643,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -581,7 +656,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             height: 48,
             decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.dark 
-                  ? AppColors.deepPurple.withOpacity(0.2) 
+                  ? AppColors.deepPurple.withValues(alpha: 0.2) 
                   : AppColors.palePurple,
               borderRadius: BorderRadius.circular(12),
             ),
@@ -619,7 +694,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -628,13 +703,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.labelSmall,
+          if (title.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
             ),
-          ),
           ...children,
         ],
       ),
@@ -656,7 +732,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         height: 40,
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark 
-              ? AppColors.deepPurple.withOpacity(0.2) 
+              ? AppColors.deepPurple.withValues(alpha: 0.2) 
               : AppColors.palePurple,
           borderRadius: BorderRadius.circular(10),
         ),
@@ -687,6 +763,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
     );
   }
+  Widget _buildRadioItem<T> (
+      BuildContext context, {
+      required String title,
+      required T value,
+      required T groupValue,
+      required ValueChanged<T> onChanged,
+  }) {
+    return ListTile(
+      title: Text(title),
+      leading: Radio<T>(
+        value: value,
+        groupValue: groupValue,
+        onChanged: (T? val) {
+          if (val != null) onChanged(val);
+        },
+      ),
+      onTap: () {
+        onChanged(value);
+      },
+    );
+  }
 }
 
 /// A dialog widget responsible for handling master password changes.
@@ -704,7 +801,6 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _hintController = TextEditingController();
   bool _isLoading = false;
   double _strength = 0.0;
   bool _obscureCurrent = true;
@@ -723,7 +819,6 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
     _currentPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
-    _hintController.dispose();
     super.dispose();
   }
 
@@ -740,7 +835,7 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
   Future<void> _handleSubmit() async {
     setState(() => _isLoading = true);
     final vaultManager = ref.read(vaultManagerProvider);
-    final storageService = ref.read(storageServiceProvider);
+    // storageService removed
 
     try {
       // 1. Validate Form
@@ -767,10 +862,6 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
        // 3. Rekey
       await vaultManager.rekey(_newPasswordController.text);
       
-      // 4. Update Hint
-      if (_hintController.text.isNotEmpty) {
-        await storageService.savePasswordHint(_hintController.text.trim());
-      }
 
       if (mounted) {
         Navigator.pop(context);
@@ -836,14 +927,6 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                   icon: Icon(_obscureConfirm ? Icons.visibility : Icons.visibility_off),
                   onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _hintController,
-              decoration: const InputDecoration(
-                labelText: 'New Password Hint (Optional)',
-                prefixIcon: Icon(Icons.lightbulb_outline),
               ),
             ),
           ],

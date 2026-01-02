@@ -1,5 +1,7 @@
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:passm/core/services/secure_storage_service.dart';
 
 /// A service class for handling biometric authentication.
 ///
@@ -38,15 +40,23 @@ class BiometricService {
   /// Returns `true` if authentication is successful, otherwise returns `false`.
   Future<bool> authenticate({required String localizedReason}) async {
     try {
-      return await _auth.authenticate(
+      final bool didAuthenticate = await _auth.authenticate(
         localizedReason: localizedReason,
         options: const AuthenticationOptions(
           stickyAuth: true,
           biometricOnly: true,
+          useErrorDialogs: true,
         ),
       );
-    } on PlatformException {
+      return didAuthenticate;
+    } on PlatformException catch (e) {
+      debugPrint('BiometricService: Authentication error: $e');
       return false;
     }
+  }
+
+  /// Checks if the user has enabled biometric unlock in the app settings.
+  Future<bool> isEnabled(SecureStorageService storageService) async {
+    return await storageService.loadBiometricsEnabled();
   }
 }

@@ -3,13 +3,14 @@ import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../core/crypto/crypto_service.dart';
-import '../../../../core/services/secure_storage_service.dart';
-import '../models/kdf_params.dart';
-import '../models/vault.dart';
-import '../models/vault_entry.dart';
+import 'package:passm/features/vault/domain/models/kdf_params.dart';
+import 'package:passm/features/vault/domain/models/vault.dart';
+import 'package:passm/features/vault/domain/models/vault_entry.dart';
+import 'package:passm/core/services/secure_storage_service.dart';
+import 'package:passm/core/crypto/crypto_service.dart';
 
 import 'package:flutter/foundation.dart';
+import 'package:passm/core/services/biometric_service.dart';
 
 /// Manages the vault lifecycle including encryption, decryption, and data persistence.
 ///
@@ -24,6 +25,7 @@ import 'package:flutter/foundation.dart';
 class VaultManager with ChangeNotifier {
   final CryptoService _cryptoService;
   final SecureStorageService _storageService; 
+  final BiometricService _biometricService;
   final _uuid = const Uuid();
 
   /// The derived master key. Held in memory only while unlocked.
@@ -42,9 +44,11 @@ class VaultManager with ChangeNotifier {
   VaultManager({
     CryptoService? cryptoService,
     SecureStorageService? storageService,
+    BiometricService? biometricService,
     Duration autoLockDuration = const Duration(minutes: 5),
   })  : _cryptoService = cryptoService ?? CryptoService(),
         _storageService = storageService ?? SecureStorageService(),
+        _biometricService = biometricService ?? BiometricService(),
         _autoLockDuration = autoLockDuration;
 
   /// Returns `true` if the vault is currently locked (master key is not present).
@@ -114,6 +118,91 @@ class VaultManager with ChangeNotifier {
       _kdfParams = null;
       throw Exception('Failed to unlock vault: Invalid password or corrupted data.');
     }
+  }
+
+  /// Attempts to unlock the vault using biometrics.
+  /// 
+  /// 1. Verifies biometric authentication.
+  /// 2. Retrieves the wrapped master key from secure storage.
+  /// 3. Standard unlock flow using the retrieved key.
+  Future<void> unlockWithBiometrics() async {
+    final isBiometricsEnabled = await _storageService.loadBiometricsEnabled();
+    if (!isBiometricsEnabled) {
+      throw Exception('Biometric unlock is not enabled.');
+    }
+
+    final authenticated = await _biometricService.authenticate(
+      localizedReason: 'Unlock your vault',
+    );
+
+    if (!authenticated) {
+      throw Exception('Biometric authentication failed or was canceled.');
+    }
+
+    final wrappedKeyBase64 = await _storageService.loadWrappedMasterKey();
+    if (wrappedKeyBase64 == null) {
+      throw Exception('Biometric key not found. Please log in with your password.');
+    }
+
+    final keyBytes = base64.decode(wrappedKeyBase64);
+    final key = SecretKey(keyBytes);
+
+    final storedVaultJson = await _storageService.loadVault();
+    if (storedVaultJson == null) {
+      throw Exception('No vault found in storage.');
+    }
+
+    final encryptedVault = EncryptedVault.fromJson(json.decode(storedVaultJson));
+
+    try {
+      final plaintext = await _cryptoService.decrypt(
+        encryptedVault.encryptedBlob,
+        key,
+        encryptedVault.nonce,
+      );
+
+      final List<dynamic> jsonList = json.decode(plaintext);
+      _entries = jsonList.map((e) => VaultEntry.fromJson(e)).toList();
+      _masterKey = key;
+      _kdfParams = encryptedVault.kdfParams;
+
+      _resetAutoLockTimer();
+      notifyListeners();
+    } catch (e) {
+      _masterKey = null;
+      _kdfParams = null;
+      throw Exception('Biometric unlock failed: Could not decrypt vault with stored key.');
+    }
+  }
+
+  /// Enables biometric unlock by wrapping the master key and saving it securely.
+  Future<void> enableBiometricUnlock(String masterPassword) async {
+    if (isLocked) {
+      // If locked, we need to verify the password first to get the key
+      final storedVaultJson = await _storageService.loadVault();
+      if (storedVaultJson == null) throw Exception('No vault found');
+      
+      final encryptedVault = EncryptedVault.fromJson(json.decode(storedVaultJson));
+
+      
+      // Verify password by unlocking
+      await unlock(masterPassword, encryptedVault);
+    }
+
+    // Now that we are sure we have the correct master key
+    final keyData = await _masterKey!.extractBytes();
+    final keyBase64 = base64.encode(keyData);
+
+    await _storageService.saveWrappedMasterKey(keyBase64);
+    await _storageService.saveBiometricsEnabled(true);
+    notifyListeners();
+  }
+
+  /// Disables biometric unlock and clears the wrapped key.
+  Future<void> disableBiometricUnlock() async {
+    await _storageService.saveBiometricsEnabled(false);
+    await _storageService.clearWrappedMasterKey();
+    notifyListeners();
   }
 
   /// Locks the vault and clears sensitive data (keys and entries) from memory.

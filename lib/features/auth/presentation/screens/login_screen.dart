@@ -22,11 +22,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   bool _obscurePassword = true;
+  bool _isBiometricsAvailable = false;
+  bool _isBiometricsEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _loadSavedEmail();
+    _checkBiometrics();
+  }
+
+  /// Checks if biometrics are available and enabled for this device/user.
+  Future<void> _checkBiometrics() async {
+    final biometricService = ref.read(biometricServiceProvider);
+    final storageService = ref.read(storageServiceProvider);
+    
+    final isAvailable = await biometricService.isAvailable();
+    final isEnabled = await biometricService.isEnabled(storageService);
+    
+    setState(() {
+      _isBiometricsAvailable = isAvailable;
+      _isBiometricsEnabled = isEnabled;
+    });
+
+    // Optional: Auto-trigger biometrics if enabled
+    if (isAvailable && isEnabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleBiometricUnlock();
+      });
+    }
   }
 
   /// Loads the last saved email from secure storage to pre-fill the email field.
@@ -95,6 +119,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  /// Handles unlocking the vault using biometrics.
+  Future<void> _handleBiometricUnlock() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final vaultManager = ref.read(vaultManagerProvider);
+      await vaultManager.unlockWithBiometrics();
+
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const VaultScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          // If biometric fails, we don't necessarily want a loud error if it was a cancel
+          if (!e.toString().contains('canceled')) {
+             _errorMessage = e.toString().replaceAll('Exception: ', '');
+          }
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,7 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   height: 80,
                   decoration: BoxDecoration(
                     color: Theme.of(context).brightness == Brightness.dark 
-                        ? AppColors.deepPurple.withOpacity(0.2) 
+                        ? AppColors.deepPurple.withValues(alpha: 0.2) 
                         : AppColors.palePurple,
                     shape: BoxShape.circle,
                   ),
@@ -123,7 +178,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 32),
                 
                 Text(
-                  'PassM',
+                  'Keynest',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
@@ -143,90 +198,109 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 20,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   padding: const EdgeInsets.all(32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TextField(
-                        controller: _emailController,
-                        enabled: !_isLoading,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.email_outlined),
+                  child: AutofillGroup(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextField(
+                          controller: _emailController,
+                          enabled: !_isLoading,
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const [AutofillHints.email],
+                          decoration: const InputDecoration(
+                            labelText: 'Email Address',
+                            prefixIcon: Icon(Icons.email_outlined),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: _passwordController,
-                        enabled: !_isLoading,
-                        obscureText: _obscurePassword,
-                        onSubmitted: (_) => _handleLogin(),
-                        decoration: InputDecoration(
-                          labelText: 'Master Password',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                              color: Colors.grey,
+                        const SizedBox(height: 20),
+                        TextField(
+                          controller: _passwordController,
+                          enabled: !_isLoading,
+                          obscureText: _obscurePassword,
+                          autofillHints: const [AutofillHints.password],
+                          onSubmitted: (_) => _handleLogin(),
+                          decoration: InputDecoration(
+                            labelText: 'Master Password',
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
                           ),
                         ),
-                      ),
-                      if (_errorMessage != null) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).brightness == Brightness.dark 
-                                ? Colors.red.withOpacity(0.1) 
-                                : Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            _errorMessage!,
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontSize: 13,
+                        const SizedBox(height: 12),
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.red.withValues(alpha: 0.1) 
+                                  : Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            textAlign: TextAlign.center,
+                            child: Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontSize: 13,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Text('Unlock Vault'),
                           ),
                         ),
+                        if (_isBiometricsAvailable && _isBiometricsEnabled) ...[
+                          const SizedBox(height: 16),
+                          OutlinedButton.icon(
+                            onPressed: _isLoading ? null : _handleBiometricUnlock,
+                            icon: const Icon(Icons.fingerprint),
+                            label: const Text('Unlock with Biometrics'),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 56),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                )
-                              : const Text('Unlock Vault'),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),

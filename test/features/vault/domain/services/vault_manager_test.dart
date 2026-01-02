@@ -3,12 +3,44 @@ import 'package:passm/features/vault/domain/services/vault_manager.dart';
 import 'package:passm/core/services/secure_storage_service.dart';
 import 'package:passm/core/crypto/crypto_service.dart';
 
-class MockSecureStorage extends SecureStorageService {
+import 'package:passm/core/services/biometric_service.dart';
+
+class MockBiometricService extends BiometricService {
+  bool authenticateResult = true;
   @override
-  Future<void> saveVault(String encryptedVault) async {}
+  Future<bool> isAvailable() async => true;
+  @override
+  Future<bool> authenticate({required String localizedReason}) async => authenticateResult;
+}
+
+class MockSecureStorage extends SecureStorageService {
+  String? vaultData;
+  String? wrappedKey;
+  bool biometricsEnabled = false;
+
+  @override
+  Future<void> saveVault(String encryptedVault) async {
+    vaultData = encryptedVault;
+  }
   
   @override
-  Future<String?> loadVault() async => null;
+  Future<String?> loadVault() async => vaultData;
+
+  @override
+  Future<void> saveBiometricsEnabled(bool enabled) async {
+    biometricsEnabled = enabled;
+  }
+
+  @override
+  Future<bool> loadBiometricsEnabled() async => biometricsEnabled;
+
+  @override
+  Future<void> saveWrappedMasterKey(String masterKeyBase64) async {
+    wrappedKey = masterKeyBase64;
+  }
+
+  @override
+  Future<String?> loadWrappedMasterKey() async => wrappedKey;
 }
 
 void main() {
@@ -80,6 +112,41 @@ void main() {
       
       await Future.delayed(const Duration(milliseconds: 200));
       expect(vaultManager.isLocked, true);
+    });
+
+    test('Enable Biometric Unlock should save wrapped key', () async {
+      final mockStorage = MockSecureStorage();
+      vaultManager = VaultManager(
+        storageService: mockStorage,
+        biometricService: MockBiometricService(),
+      );
+      
+      await vaultManager.createVault('password');
+      await vaultManager.enableBiometricUnlock('password');
+      
+      expect(mockStorage.biometricsEnabled, true);
+      expect(mockStorage.wrappedKey, isNotNull);
+    });
+
+    test('Unlock with Biometrics should unlock successfully', () async {
+      final mockStorage = MockSecureStorage();
+      final mockBio = MockBiometricService();
+      vaultManager = VaultManager(
+        storageService: mockStorage,
+        biometricService: mockBio,
+      );
+      
+      // 1. Create and enable
+      await vaultManager.createVault('password');
+      await vaultManager.enableBiometricUnlock('password');
+      
+      // 2. Lock
+      vaultManager.lock();
+      expect(vaultManager.isLocked, true);
+      
+      // 3. Unlock with biometrics
+      await vaultManager.unlockWithBiometrics();
+      expect(vaultManager.isLocked, false);
     });
   });
 }

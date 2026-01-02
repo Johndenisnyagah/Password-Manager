@@ -5,6 +5,7 @@ import 'features/auth/domain/services/auth_service.dart';
 import 'features/vault/domain/services/vault_manager.dart';
 import 'features/totp/domain/services/totp_service.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
+import 'features/auth/presentation/screens/onboarding_screen.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/services/secure_storage_service.dart';
@@ -97,13 +98,13 @@ class PassMApp extends ConsumerWidget {
       pwnedService: pwnedService,
       biometricService: biometricService,
       child: MaterialApp(
-        title: 'PassM',
+        title: 'Keynest',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
         builder: (context, child) => PrivacyOverlay(child: child!),
-        home: const LoginScreen(),
+        home: const OnboardingScreen(),
       ),
     );
   }

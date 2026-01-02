@@ -168,16 +168,19 @@ class _VaultHealthScreenState extends ConsumerState<VaultHealthScreen> {
 
   Widget _buildScoreHeader() {
     Color scoreColor = Colors.green;
-    if (_healthScore < 40) scoreColor = Colors.red;
-    else if (_healthScore < 75) scoreColor = Colors.orange;
+    if (_healthScore < 40) {
+      scoreColor = Colors.red;
+    } else if (_healthScore < 75) {
+      scoreColor = Colors.orange;
+    }
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: scoreColor.withOpacity(0.1),
+        color: scoreColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scoreColor.withOpacity(0.3)),
+        border: Border.all(color: scoreColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -190,7 +193,7 @@ class _VaultHealthScreenState extends ConsumerState<VaultHealthScreen> {
                 child: CircularProgressIndicator(
                   value: _healthScore / 100,
                   strokeWidth: 12,
-                  backgroundColor: scoreColor.withOpacity(0.1),
+                  backgroundColor: scoreColor.withValues(alpha: 0.1),
                   valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
                 ),
               ),
@@ -263,7 +266,7 @@ class _VaultHealthScreenState extends ConsumerState<VaultHealthScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.1),
+          backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(icon, color: color),
         ),
         title: Text(issue.entry.serviceName, style: const TextStyle(fontWeight: FontWeight.bold)),

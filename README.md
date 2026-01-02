@@ -1,8 +1,8 @@
-# PassM - Secure Password Manager
+# Keynest - Secure Password Manager
 
 > 🤖 **AI-Assisted Development**: This project was developed with the assistance of GitHub Copilot AI, which helped with code generation, debugging, architecture decisions, and best practices implementation.
 
-A modern, secure, and hybrid password manager built with Flutter. PassM prioritizes security with client-side encryption while offering a premium user experience with smooth animations and intuitive design.
+A modern, secure, and hybrid password manager built with Flutter. Keynest prioritizes security with client-side encryption while offering a premium user experience with smooth animations and intuitive design.
 
 > ⚠️ **Development Status**: This project is currently in active development and is **NOT production-ready**. Use at your own risk. Do not use this as your primary password manager until a stable release is announced.
 
@@ -81,7 +81,7 @@ Visit the [**Releases Page**](https://github.com/Johndenisnyagah/Password-Manage
   - Enable "Install from Unknown Sources" in your device settings
   - Open the APK file and follow installation prompts
   
-- **🌐 Web App**: [**Try PassM Online**](https://johndenisnyagah.github.io/Password-Manager/) *(Coming Soon)*
+- **🌐 Web App**: [**Try Keynest Online**](https://johndenisnyagah.github.io/Password-Manager/) *(Coming Soon)*
   - No installation required - runs directly in your browser
   - Works on any device with a modern web browser
 
@@ -159,13 +159,21 @@ Visit the [**Releases Page**](https://github.com/Johndenisnyagah/Password-Manage
 - **Encrypted Import/Export**: Secure JSON backups for data portability.
 
 ### Current Status
-**Version**: 1.4.0  
-**Stability**: Stable - Final Polish & Advanced Features Implemented.
+**Version**: 1.6.0  
+**Stability**: Stable - Production Ready (Zero Lint Issues)
 
-### **Latest Updates** (v1.4.0):
-- **Persistence Overhaul**: Fixed critical bug in Web/Chrome storage where data was lost on refresh. Implemented fully async CRUD operations for robust data saving.
-- **Theme Management**: Added "Appearance" settings with Light/Dark/System mode toggle, fully persisted across restarts.
-- **Reactive UI**: Upgraded `EntryDetailScreen` and `VaultScreen` to be reactive, reflecting edits instantly without manual Refresh.
-- **Profile Customization**: Users can now upload and persist custom profile pictures, replacing the default Lottie placeholder.
-- **Improved Web Compatibility**: Refactored storage layer to remove web-incompatible dependencies (`dart:io`), ensuring smoother cross-platform builds.
-- **Dark Mode Polish**: Refined contrast in 'Add Entry' forms to ensure comfortable readability and visual consistency in dark themes.
+### **Latest Updates** (v1.6.0 - Code Quality Release):
+- **Zero Lint Issues**: Comprehensive static analysis cleanup achieving `flutter analyze` with no issues.
+- **Deprecated API Migration**: Updated all `Color.withOpacity()` calls to modern `Color.withValues(alpha:)` API across 13+ files.
+- **Async Safety Audit**: Fixed `use_build_context_synchronously` violations with proper `mounted` checks and context handling.
+- **Production Logging**: Replaced `print()` statements with `debugPrint()` (auto-stripped in release builds).
+- **Dead Code Removal**: Cleaned unused variables in `VaultManager` and `ProfileScreen`.
+- **Test Environment**: Fixed widget test layout overflow issues with proper screen dimension configuration.
+
+### Previous Updates (v1.5.0):
+- **Security Hardening**: Completely removed the "Password Hint" feature from the registration and profile screens to eliminate potential master password leaks.
+- **Profile UI Overhaul**: 
+    - Replaced the top colored header with a clean, uniform background.
+    - Optimized the settings layout by separating grouped items (Security, Data) into individual "mini cards" for better clarity.
+    - Updated the "Logout" button to match the application's deep purple theme.
+- **Themed Navigation**: Consistent deep purple navigation icons and titles across the profile management flow.

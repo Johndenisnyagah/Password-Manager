@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 /// A service class for checking passwords against the Have I Been Pwned (HIBP) database.
 ///
@@ -46,7 +47,7 @@ class PwnedService {
       }
     } catch (e) {
       // Log error but don't crash
-      print('HIBP Error: $e');
+      debugPrint('HIBP Error: $e');
     }
 
     return 0;

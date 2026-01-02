@@ -11,17 +11,21 @@ class CryptoService {
   // We use AES-GCM (256-bit) as it provides both confidentiality and integrity (AEAD).
   final _cipher = AesGcm.with256bits();
 
-  // Default PBKDF2 iterations (OWASP recommends 600k for HMAC-SHA256)
+  // Default PBKDF2 iterations (OWASP recommends 600,000 for SHA256)
   static const int defaultIterations = 600000;
 
-  /// Derives a 256-bit key from the master password and salt using PBKDF2-HMAC-SHA256.
+  /// Derives a 256-bit key from the master password and salt using PBKDF2.
   ///
   /// [password] The master password input by the user.
   /// [salt] The unique salt associated with the user/vault.
   /// [iterations] The number of hashing iterations. Defaults to 600,000.
   ///
   /// Returns a [SecretKey] derived from the password.
-  Future<SecretKey> deriveMasterKey(String password, Uint8List salt, {int iterations = defaultIterations}) async {
+  Future<SecretKey> deriveMasterKey(
+    String password, 
+    Uint8List salt, {
+    int iterations = defaultIterations,
+  }) async {
     final pbkdf2 = Pbkdf2(
       macAlgorithm: Hmac.sha256(),
       iterations: iterations,

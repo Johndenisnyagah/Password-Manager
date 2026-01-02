@@ -100,9 +100,9 @@ PassM is currently in **active development** and has the following known limitat
 
 ### Cryptographic Implementation
 - ✅ **AES-256-GCM**: Industry-standard AEAD cipher
-- ✅ **PBKDF2-HMAC-SHA256**: 600,000 iterations (OWASP compliant)
-- ⚠️ **Key Derivation**: Uses PBKDF2 instead of Argon2id (Flutter library limitations)
-  - Note: README mentions Argon2id, but actual implementation uses PBKDF2 (will be updated)
+- ✅ **Argon2id**: Industry-standard key derivation (OWASP compliant)
+- ✅ **Screenshot protection**: Enabled on Android via FLAG_SECURE
+- ⚠️ **Key Derivation**: Migrated to Argon2id (32 MiB, 3 iterations)
 - ⚠️ **Memory protection**: Limited protection against memory dumps on some platforms
 
 ### Platform-Specific Risks

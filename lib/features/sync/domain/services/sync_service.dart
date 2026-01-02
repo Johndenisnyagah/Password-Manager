@@ -1,5 +1,6 @@
 import '../../../vault/domain/models/vault.dart';
 import '../../../auth/domain/services/auth_service.dart';
+import 'package:flutter/foundation.dart';
 
 /// Service responsible for syncing the encrypted vault blob with the backend.
 ///
@@ -32,7 +33,7 @@ class SyncService {
     // final body = json.encode(vault.toJson());
     // await http.put(Uri.parse('$baseUrl/vault'), headers: headers, body: body);
     
-    print('Sync: Uploaded vault version ${vault.version}');
+    debugPrint('Sync: Uploaded vault version ${vault.version}');
   }
 
   /// Downloads the latest encrypted vault from the backend.

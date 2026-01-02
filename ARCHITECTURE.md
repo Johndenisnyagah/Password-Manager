@@ -22,7 +22,7 @@ PassM is a cross-platform password manager built with Flutter that prioritizes s
 **Key Technical Characteristics:**
 - **Framework**: Flutter 3.0+ (Dart)
 - **Architecture**: Clean Architecture + Feature-First Organization
-- **Security**: AES-256-GCM encryption with PBKDF2-HMAC-SHA256 key derivation
+- **Security**: AES-256-GCM encryption with Argon2id key derivation
 - **State Management**: Flutter Riverpod + ChangeNotifier
 - **Platforms**: iOS, Android, Web, Windows, macOS
 
@@ -43,42 +43,42 @@ PassM is a cross-platform password manager built with Flutter that prioritizes s
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Presentation Layer                        │
+│                        Presentation Layer                       │
 │  (Screens, Widgets, UI Logic)                                   │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
-│  │  Auth    │  │  Vault   │  │  Profile │  │  TOTP    │       │
-│  │  Screens │  │  Screens │  │  Screens │  │  Screens │       │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
+│  │  Auth    │  │  Vault   │  │  Profile │  │  TOTP    │         │
+│  │  Screens │  │  Screens │  │  Screens │  │  Screens │         │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘         │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Domain Layer                             │
+│                         Domain Layer                            │
 │  (Business Logic, Services, Models)                             │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
-│  │Auth      │  │ Vault    │  │  TOTP    │  │  Sync    │       │
-│  │Service   │  │ Manager  │  │  Service │  │  Service │       │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
+│  │Auth      │  │ Vault    │  │  TOTP    │  │  Sync    │         │
+│  │Service   │  │ Manager  │  │  Service │  │  Service │         │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘         │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Data Layer                               │
+│                         Data Layer                              │
 │  (Repositories, Storage, External APIs)                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
-│  │ Vault    │  │ Secure   │  │  Pwned   │  │  Local   │       │
-│  │Repository│  │ Storage  │  │  API     │  │  Storage │       │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
+│  │ Vault    │  │ Secure   │  │  Pwned   │  │  Local   │         │
+│  │Repository│  │ Storage  │  │  API     │  │  Storage │         │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘         │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Core Infrastructure                         │
+│                      Core Infrastructure                        │
 │  (Crypto, Utils, Theme, Widgets)                                │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
-│  │ Crypto   │  │ Service  │  │  App     │  │ Common   │       │
-│  │ Service  │  │ Provider │  │  Theme   │  │ Widgets  │       │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
+│  │ Crypto   │  │ Service  │  │  App     │  │ Common   │         │
+│  │ Service  │  │ Provider │  │  Theme   │  │ Widgets  │         │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -92,7 +92,7 @@ lib/
 │
 ├── core/                          # Shared infrastructure
 │   ├── crypto/
-│   │   └── crypto_service.dart    # AES-GCM encryption & PBKDF2 key derivation
+│   │   └── crypto_service.dart    # AES-GCM encryption & Argon2id key derivation
 │   ├── providers/
 │   │   └── service_providers.dart # Riverpod provider definitions
 │   ├── services/
@@ -225,7 +225,7 @@ Uint8List generateSalt()
 
 **Security Details**:
 - **Algorithm**: AES-256-GCM (AEAD - Authenticated Encryption with Associated Data)
-- **Key Derivation**: PBKDF2-HMAC-SHA256 with 600,000 iterations
+- **Key Derivation**: Argon2id (32 MiB, 3 iterations, 1 parallelism)
 - **Nonce**: 12-byte random nonce per encryption operation
 - **Output**: Base64-encoded ciphertext + MAC + nonce
 
@@ -386,33 +386,33 @@ final totpServiceProvider = Provider<TotpService>((ref) => ...);
 
 ```
 ┌─────────────────────────────────────────────┐
-│         Master Password (User Input)         │
+│         Master Password (User Input)        │
 └──────────────────┬──────────────────────────┘
                    │
                    ▼
-         ┌─────────────────────┐
+         ┌──────────────────────┐
          │   PBKDF2-HMAC-SHA256 │
          │   600,000 iterations │
          │   + Random Salt      │
-         └─────────┬───────────┘
+         └─────────┬────────────┘
                    │
                    ▼
-         ┌─────────────────────┐
+         ┌──────────────────────┐
          │  Master Key (256-bit)│ ← Held in memory only
-         └─────────┬───────────┘
+         └─────────┬────────────┘
                    │
                    ▼
          ┌─────────────────────┐
-         │   AES-256-GCM        │
-         │   + Random Nonce     │
-         │   + MAC (Auth Tag)   │
+         │   AES-256-GCM       │
+         │   + Random Nonce    │
+         │   + MAC (Auth Tag)  │
          └─────────┬───────────┘
                    │
                    ▼
-         ┌─────────────────────┐
+         ┌──────────────────────┐
          │  Encrypted Vault Blob│ ← Stored on disk
          │  (Base64 Ciphertext) │
-         └─────────────────────┘
+         └──────────────────────┘
 ```
 
 ### Key Security Features
@@ -568,14 +568,14 @@ Consumer(
 ### Test Pyramid
 
 ```
-        ┌─────────────┐
+        ┌──────────────┐
         │   E2E Tests  │  ← Integration tests (Flutter Driver)
-        └─────────────┘
-       ┌────────────────┐
+        └──────────────┘
+       ┌─────────────────┐
        │  Widget Tests   │  ← UI component tests
-       └────────────────┘
+       └─────────────────┘
      ┌──────────────────────┐
-     │     Unit Tests        │  ← Business logic tests
+     │     Unit Tests       │  ← Business logic tests
      └──────────────────────┘
 ```
 

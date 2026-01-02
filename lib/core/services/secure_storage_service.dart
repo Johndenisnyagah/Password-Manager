@@ -1,9 +1,7 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:idb_shim/idb_browser.dart';
-import 'package:idb_shim/idb_shim.dart';
 
 /// A service class provides secure storage capabilities for the application.
 ///
@@ -18,17 +16,21 @@ import 'package:idb_shim/idb_shim.dart';
 class SecureStorageService {
   static const String _vaultKey = 'encrypted_vault';
   static const String _photoKey = 'profile_photo';
-  static const String _hintKey = 'password_hint';
   static const String _usernameKey = 'username';
   static const String _emailKey = 'user_email';
   static const String _themeKey = 'theme_mode';
+  static const String _biometricsEnabledKey = 'biometrics_enabled';
+  static const String _wrappedMasterKey = 'wrapped_master_key';
   static const String _dbName = 'passm_db';
   static const String _storeName = 'secure_store';
 
   // Mobile/Desktop storage
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  // Web storage
+  // WARNING: Web storage (IndexedDB) is NOT as secure as native mobile secure storage (Keychain/Keystore).
+  // Native storage is hardware-backed, while IndexedDB relies on browser sandboxing.
+  // Data is encrypted at the application level before being saved here, but the keys
+  // are inherently more vulnerable in a browser environment.
   Database? _db;
 
   // Constructor
@@ -112,27 +114,6 @@ class SecureStorageService {
     return null;
   }
 
-  /// Saves the password hint.
-  ///
-  /// [hint] The password hint string.
-  Future<void> savePasswordHint(String hint) async {
-    if (kIsWeb) {
-      await _saveWeb(_hintKey, hint);
-    } else {
-      await _secureStorage.write(key: _hintKey, value: hint);
-    }
-  }
-
-  /// Loads the password hint.
-  ///
-  /// Returns the password hint string, or `null` if not found.
-  Future<String?> loadPasswordHint() async {
-    if (kIsWeb) {
-      return await _loadWeb(_hintKey) as String?;
-    } else {
-      return await _secureStorage.read(key: _hintKey);
-    }
-  }
 
   /// Saves the username.
   ///
@@ -200,13 +181,84 @@ class SecureStorageService {
     }
   }
 
+  /// Saves whether biometric unlock is enabled.
+  Future<void> saveBiometricsEnabled(bool enabled) async {
+    final value = enabled.toString();
+    if (kIsWeb) {
+      await _saveWeb(_biometricsEnabledKey, value);
+    } else {
+      await _secureStorage.write(key: _biometricsEnabledKey, value: value);
+    }
+  }
+
+  /// Loads whether biometric unlock is enabled.
+  Future<bool> loadBiometricsEnabled() async {
+    String? value;
+    if (kIsWeb) {
+      value = await _loadWeb(_biometricsEnabledKey) as String?;
+    } else {
+      value = await _secureStorage.read(key: _biometricsEnabledKey);
+    }
+    return value == 'true';
+  }
+
+  /// Saves the master key protected by biometrics.
+  /// 
+  /// On mobile, it uses [authenticationRequired] true to enforce device-level security.
+  Future<void> saveWrappedMasterKey(String masterKeyBase64) async {
+    if (kIsWeb) {
+      // Biometric protection not natively supported in the same way on Web via this plugin
+      await _saveWeb(_wrappedMasterKey, masterKeyBase64);
+    } else {
+      await _secureStorage.write(
+        key: _wrappedMasterKey,
+        value: masterKeyBase64,
+        iOptions: const IOSOptions(
+          // We don't set authenticationRequired: true here because we use local_auth 
+          // to provide a better UX and custom messages before reading.
+        ),
+        aOptions: const AndroidOptions(
+          encryptedSharedPreferences: true,
+        ),
+      );
+    }
+  }
+
+  /// Loads the wrapped master key.
+  Future<String?> loadWrappedMasterKey() async {
+    if (kIsWeb) {
+      return await _loadWeb(_wrappedMasterKey) as String?;
+    } else {
+      return await _secureStorage.read(
+        key: _wrappedMasterKey,
+        aOptions: const AndroidOptions(
+          encryptedSharedPreferences: true,
+        ),
+      );
+    }
+  }
+
+  /// Clears the wrapped master key.
+  Future<void> clearWrappedMasterKey() async {
+    if (kIsWeb) {
+      if (_db != null) {
+        final txn = _db!.transaction(_storeName, 'readwrite');
+        final store = txn.objectStore(_storeName);
+        await store.delete(_wrappedMasterKey);
+        await txn.completed;
+      }
+    } else {
+      await _secureStorage.delete(key: _wrappedMasterKey);
+    }
+  }
+
   /// Clears all data from the secure storage.
   ///
   /// This removes all keys and values managed by this service.
   Future<void> clear() async {
     if (kIsWeb) {
       if (_db != null) {
-        final txn = _db!.transaction(_storeName, idbModeReadWrite);
+        final txn = _db!.transaction(_storeName, 'readwrite');
         final store = txn.objectStore(_storeName);
         await store.clear();
         await txn.completed;
@@ -225,7 +277,7 @@ class SecureStorageService {
         debugPrint('SecureStorageService: Cannot save to Web storage, DB not initialized');
         return;
       }
-      final txn = _db!.transaction(_storeName, idbModeReadWrite);
+      final txn = _db!.transaction(_storeName, 'readwrite');
       final store = txn.objectStore(_storeName);
       await store.put(value, key);
       await txn.completed;
@@ -242,7 +294,7 @@ class SecureStorageService {
         debugPrint('SecureStorageService: Cannot load from Web storage, DB not initialized');
         return null;
       }
-      final txn = _db!.transaction(_storeName, idbModeReadOnly);
+      final txn = _db!.transaction(_storeName, 'readonly');
       final store = txn.objectStore(_storeName);
       final value = await store.getObject(key);
       debugPrint('SecureStorageService: Loaded $key from Web storage: ${value != null}');

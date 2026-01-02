@@ -50,7 +50,6 @@ class AppTheme {
         primary: AppColors.deepPurple,
         secondary: AppColors.mediumPurple,
         surface: AppColors.cardBackground,
-        background: AppColors.lightBackground,
       ),
       fontFamily: 'Inter',
       textTheme: const TextTheme(
@@ -122,7 +121,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -157,7 +156,6 @@ class AppTheme {
         primary: AppColors.lightPurple,
         secondary: AppColors.mediumPurple,
         surface: AppColors.darkCardBackground,
-        background: AppColors.darkBackground,
       ),
       fontFamily: 'Inter',
       textTheme: const TextTheme(
