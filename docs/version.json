@@ -1,1 +1,6 @@
-{"app_name":"passm","version":"1.0.0","build_number":"1","package_name":"passm"}
+{
+    "app_name": "KeyNest",
+    "version": "1.0.0",
+    "build_number": "1",
+    "package_name": "com.example.keynest"
+}

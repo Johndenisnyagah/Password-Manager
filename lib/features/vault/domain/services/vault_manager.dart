@@ -3,14 +3,14 @@ import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:passm/features/vault/domain/models/kdf_params.dart';
-import 'package:passm/features/vault/domain/models/vault.dart';
-import 'package:passm/features/vault/domain/models/vault_entry.dart';
-import 'package:passm/core/services/secure_storage_service.dart';
-import 'package:passm/core/crypto/crypto_service.dart';
+import 'package:keynest/features/vault/domain/models/kdf_params.dart';
+import 'package:keynest/features/vault/domain/models/vault.dart';
+import 'package:keynest/features/vault/domain/models/vault_entry.dart';
+import 'package:keynest/core/services/secure_storage_service.dart';
+import 'package:keynest/core/crypto/crypto_service.dart';
 
 import 'package:flutter/foundation.dart';
-import 'package:passm/core/services/biometric_service.dart';
+import 'package:keynest/core/services/biometric_service.dart';
 
 /// Manages the vault lifecycle including encryption, decryption, and data persistence.
 ///
@@ -120,6 +120,25 @@ class VaultManager with ChangeNotifier {
     }
   }
 
+  /// Verifies if the [masterPassword] is correct for the current vault.
+  ///
+  /// This derives a key from the password and compares it to the current master key.
+  Future<bool> verifyMasterPassword(String masterPassword) async {
+    if (isLocked || _kdfParams == null) return false;
+
+    final salt = base64.decode(_kdfParams!.salt);
+    final key = await _cryptoService.deriveMasterKey(
+      masterPassword,
+      salt,
+      iterations: _kdfParams!.iterations,
+    );
+
+    final currentBytes = await _masterKey!.extractBytes();
+    final checkBytes = await key.extractBytes();
+
+    return listEquals(currentBytes, checkBytes);
+  }
+
   /// Attempts to unlock the vault using biometrics.
   /// 
   /// 1. Verifies biometric authentication.
@@ -212,6 +231,13 @@ class VaultManager with ChangeNotifier {
     _kdfParams = null;
     _autoLockTimer?.cancel();
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _autoLockTimer?.cancel();
+    _autoLockTimer = null;
+    super.dispose();
   }
 
   /// Creates a new, empty encrypted vault with the given master password.

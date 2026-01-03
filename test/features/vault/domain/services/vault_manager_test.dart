@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:passm/features/vault/domain/services/vault_manager.dart';
-import 'package:passm/core/services/secure_storage_service.dart';
-import 'package:passm/core/crypto/crypto_service.dart';
+import 'package:keynest/features/vault/domain/services/vault_manager.dart';
+import 'package:keynest/core/services/secure_storage_service.dart';
+import 'package:keynest/core/crypto/crypto_service.dart';
 
-import 'package:passm/core/services/biometric_service.dart';
+import 'package:keynest/core/services/biometric_service.dart';
 
 class MockBiometricService extends BiometricService {
   bool authenticateResult = true;

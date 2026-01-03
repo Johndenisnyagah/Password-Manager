@@ -43,6 +43,10 @@ class _VaultHealthScreenState extends ConsumerState<VaultHealthScreen> {
     });
 
     final vaultManager = ref.read(vaultManagerProvider);
+    if (vaultManager.isLocked) {
+      if (mounted) setState(() => _isAuditing = false);
+      return;
+    }
     final pwnedService = ref.read(pwnedServiceProvider);
     final entries = vaultManager.entries;
 

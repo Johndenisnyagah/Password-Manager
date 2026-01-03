@@ -4,7 +4,7 @@
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-The security of PassM is taken very seriously. If you discover a security vulnerability, we appreciate your help in disclosing it to us in a responsible manner.
+The security of KeyNest is taken very seriously. If you discover a security vulnerability, we appreciate your help in disclosing it to us in a responsible manner.
 
 ### How to Report
 
@@ -49,18 +49,18 @@ Please include the following information in your report:
 
 ## Supported Versions
 
-As PassM is currently in active development, security updates will be provided for:
+As KeyNest is currently in active development, security updates will be provided for:
 
 | Version | Supported          |
 | ------- | ------------------ |
 | 1.4.x   | :white_check_mark: |
 | < 1.4   | :x:                |
 
-**Note**: Until PassM reaches v2.0.0 (stable production release), we recommend users stay on the latest version for the most up-to-date security fixes.
+**Note**: Until KeyNest reaches v2.0.0 (stable production release), we recommend users stay on the latest version for the most up-to-date security fixes.
 
 ## Security Best Practices for Users
 
-While using PassM, please follow these security best practices:
+While using KeyNest, please follow these security best practices:
 
 ### Master Password
 - **Use a strong, unique master password** (minimum 12 characters, mixed case, numbers, symbols)
@@ -75,22 +75,22 @@ While using PassM, please follow these security best practices:
 - **Keep your OS updated** with the latest security patches
 - **Use antivirus software** on Windows/Android devices
 
-### PassM Security
+### KeyNest Security
 - **Enable auto-lock** with a short timeout (5-15 minutes recommended)
 - **Enable biometric unlock** (when feature is fully released) for convenience with security
 - **Regularly export encrypted backups** and store them securely offline
 - **Review vault health** periodically and update weak/reused/pwned passwords
-- **Verify app integrity** - Only download PassM from official sources
+- **Verify app integrity** - Only download KeyNest from official sources
 
 ### What to Avoid
 - ❌ **Never** enter your master password on phishing sites
-- ❌ **Never** run PassM on a compromised/jailbroken device
+- ❌ **Never** run KeyNest on a compromised/jailbroken device
 - ❌ **Never** screenshot your vault entries
 - ❌ **Never** share your encrypted vault file over insecure channels
 
 ## Known Security Limitations
 
-PassM is currently in **active development** and has the following known limitations:
+KeyNest is currently in **active development** and has the following known limitations:
 
 ### Current Status (v1.4.0)
 - ⚠️ **Not production-ready**: Do not use as your primary password manager yet
@@ -123,7 +123,7 @@ PassM is currently in **active development** and has the following known limitat
 
 ## Security Architecture
 
-For detailed information about PassM's security architecture, cryptographic implementation, and threat model, please see:
+For detailed information about KeyNest's security architecture, cryptographic implementation, and threat model, please see:
 
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete technical documentation
   - Security Architecture section (encryption stack, threat model)
@@ -183,4 +183,4 @@ For private security matters, always use the vulnerability reporting process abo
 
 **Last Updated**: December 24, 2025
 
-Thank you for helping keep PassM and its users secure! 🔒
+Thank you for helping keep KeyNest and its users secure! 🔒

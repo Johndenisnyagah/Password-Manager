@@ -12,8 +12,8 @@ class AuthService {
 
   /// Creates an [AuthService].
   ///
-  /// [baseUrl] defaults to 'https://api.passm.io'.
-  AuthService({this.baseUrl = 'https://api.passm.io'});
+  /// [baseUrl] defaults to 'https://api.keynest.io'.
+  AuthService({this.baseUrl = 'https://api.keynest.io'});
 
   /// Returns `true` if the user is currently authenticated (has a valid JWT).
   bool get isAuthenticated => _jwt != null;

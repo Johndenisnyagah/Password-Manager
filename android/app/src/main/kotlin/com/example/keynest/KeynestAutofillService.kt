@@ -1,4 +1,4 @@
-package com.example.passm
+package com.example.keynest
 
 import android.service.autofill.AutofillService
 import android.service.autofill.FillCallback
@@ -15,7 +15,7 @@ import android.content.Intent
 import android.app.PendingIntent
 import android.os.CancellationSignal
 
-class PassmAutofillService : AutofillService() {
+class KeynestAutofillService : AutofillService() {
 
     override fun onFillRequest(
         request: FillRequest,
@@ -23,7 +23,7 @@ class PassmAutofillService : AutofillService() {
         callback: FillCallback
     ) {
         val structure = request.fillContexts[request.fillContexts.size - 1].structure
-        Log.d("PassmAutofill", "onFillRequest called for: ${structure.activityComponent?.packageName}")
+        Log.d("KeynestAutofill", "onFillRequest called for: ${structure.activityComponent?.packageName}")
 
         // In a real implementation, we would search our database for a matching package name.
         // For this phase, we provide a placeholder that directs the user to the app.
@@ -37,7 +37,7 @@ class PassmAutofillService : AutofillService() {
     }
 
     override fun onSaveRequest(request: SaveRequest, callback: SaveCallback) {
-        Log.d("PassmAutofill", "onSaveRequest called")
+        Log.d("KeynestAutofill", "onSaveRequest called")
         // Handle saving credentials if necessary
         callback.onSuccess()
     }

@@ -8,6 +8,7 @@ import '../../../../core/utils/password_validator.dart';
 import '../widgets/password_strength_indicator.dart';
 import '../../../../core/providers/service_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'onboarding_screen.dart';
 
 /// A stateful widget that displays the user's profile and settings.
 ///
@@ -481,7 +482,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               context,
                               icon: Icons.qr_code_2_rounded,
                               label: 'TOTP Codes',
-                              value: '${vaultManager.entries.where((e) => e.totpSecret != null).length}',
+                              value: '${isLocked ? 0 : vaultManager.entries.where((e) => e.totpSecret != null).length}',
                             ),
                           ),
                         ],
@@ -595,7 +596,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             final authService = ref.read(authServiceProvider);
                             vaultManager.lock();
                             authService.logout();
-                            Navigator.of(context).popUntil((route) => route.isFirst);
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                              (route) => false,
+                            );
                           },
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: AppColors.deepPurple, width: 2),
@@ -798,14 +802,12 @@ class ChangePasswordDialog extends ConsumerStatefulWidget {
 }
 
 class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   double _strength = 0.0;
-  bool _obscureCurrent = true;
-  bool _obscureNew = true;
-  bool _obscureConfirm = true;
 
   @override
   void initState() {
@@ -828,51 +830,33 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
     });
   }
 
-  /// Handles the password change submission.
-  ///
-  /// Validates the new password, checks against the current password (conceptual),
-  /// and triggers a vault re-key operation.
-  Future<void> _handleSubmit() async {
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
-    final vaultManager = ref.read(vaultManagerProvider);
-    // storageService removed
 
     try {
-      // 1. Validate Form
-      if (_currentPasswordController.text.isEmpty ||
-          _newPasswordController.text.isEmpty ||
-          _confirmPasswordController.text.isEmpty) {
-        throw Exception('Please fill in all fields');
+      final vaultManager = ref.read(vaultManagerProvider);
+
+      // 1. Verify current password
+      final isValid = await vaultManager.verifyMasterPassword(_currentPasswordController.text);
+      if (!isValid) {
+        throw Exception('Current master password is incorrect.');
       }
 
-      if (_newPasswordController.text != _confirmPasswordController.text) {
-        throw Exception('New passwords do not match');
-      }
-
-      PasswordValidator.validate(_newPasswordController.text);
-
-      // 2. Verify Current Password (by attempting unlock on current state implementation concept)
-      // Since VaultManager doesn't expose a "checkPassword", real verification happens 
-      // implicitly if we were to re-deserialize. But 'rekey' logic assumes we are already unlocked.
-      // Ideally, we should check it.
-      // For now, we proceed to rekey. If we wanted strict check, we could try to decrypt a test message?
-      // But we are already authenticated.
-      // We will assume "Current Password" is for user verification intent.
-
-       // 3. Rekey
+      // 2. Perform re-key
       await vaultManager.rekey(_newPasswordController.text);
-      
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Master password updated successfully')),
+          const SnackBar(content: Text('Master password updated successfully!')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}')),
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
         );
       }
     } finally {
@@ -885,51 +869,56 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
     return AlertDialog(
       title: const Text('Change Master Password'),
       content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _currentPasswordController,
-              obscureText: _obscureCurrent,
-              decoration: InputDecoration(
-                labelText: 'Current Password',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(_obscureCurrent ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
-                ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'This will re-encrypt your entire vault. Do not forget your new password!',
+                style: TextStyle(fontSize: 12, color: AppColors.mediumText),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _newPasswordController,
-              obscureText: _obscureNew,
-              decoration: InputDecoration(
-                labelText: 'New Password',
-                prefixIcon: const Icon(Icons.key),
-                suffixIcon: IconButton(
-                  icon: Icon(_obscureNew ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () => setState(() => _obscureNew = !_obscureNew),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _currentPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Current Master Password',
+                  prefixIcon: Icon(Icons.lock_open_rounded),
                 ),
+                validator: (val) => (val == null || val.isEmpty) ? 'Required' : null,
               ),
-            ),
-            const SizedBox(height: 8),
-            PasswordStrengthIndicator(strength: _strength),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _confirmPasswordController,
-              obscureText: _obscureConfirm,
-              decoration: InputDecoration(
-                labelText: 'Confirm New Password',
-                prefixIcon: const Icon(Icons.check_circle_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(_obscureConfirm ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _newPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'New Master Password',
+                  prefixIcon: Icon(Icons.lock_outline_rounded),
                 ),
+                validator: (val) {
+                  if (val == null || val.isEmpty) return 'Required';
+                  if (val.length < 8) return 'Minimum 8 characters';
+                  return null;
+                },
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              PasswordStrengthIndicator(strength: _strength),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm New Password',
+                  prefixIcon: Icon(Icons.check_circle_outline_rounded),
+                ),
+                validator: (val) {
+                  if (val != _newPasswordController.text) return 'Passwords do not match';
+                  return null;
+                },
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -938,10 +927,10 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: _isLoading ? null : _handleSubmit,
+          onPressed: _isLoading ? null : _submit,
           child: _isLoading 
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Update'),
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+              : const Text('Change Password'),
         ),
       ],
     );

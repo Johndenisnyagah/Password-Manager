@@ -9,6 +9,10 @@ import 'package:flutter/foundation.dart';
 /// appeared in a known data breach without revealing the password itself.
 class PwnedService {
   static const String _baseUrl = 'https://api.pwnedpasswords.com/range/';
+  final http.Client _client;
+
+  /// Creates a [PwnedService].
+  PwnedService({http.Client? client}) : _client = client ?? http.Client();
 
   /// Checks the number of times the provided [password] has appeared in data breaches.
   ///
@@ -33,7 +37,7 @@ class PwnedService {
 
     try {
       // 3. Query HIBP Range API
-      final response = await http.get(Uri.parse('$_baseUrl$prefix'));
+      final response = await _client.get(Uri.parse('$_baseUrl$prefix'));
 
       if (response.statusCode == 200) {
         // 4. Search for suffix in results

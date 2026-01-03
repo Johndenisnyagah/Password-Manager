@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:passm/features/vault/presentation/screens/add_entry_screen.dart';
-import 'package:passm/core/providers/service_providers.dart';
-import 'package:passm/features/vault/domain/services/vault_manager.dart';
-import 'package:passm/core/services/secure_storage_service.dart';
+import 'package:keynest/features/vault/presentation/screens/add_entry_screen.dart';
+import 'package:keynest/core/providers/service_providers.dart';
+import 'package:keynest/features/vault/domain/services/vault_manager.dart';
+import 'package:keynest/core/services/secure_storage_service.dart';
 
 class MockSecureStorage extends SecureStorageService {
   @override

@@ -47,7 +47,7 @@ void main() async {
       biometricServiceProvider.overrideWithValue(biometricService),
       vaultManagerProvider.overrideWith((ref) => vaultManager),
     ],
-    child: PassMApp(
+    child: KeyNestApp(
       authService: authService,
       vaultManager: vaultManager,
       totpService: totpService,
@@ -65,7 +65,7 @@ void main() async {
 /// - [MaterialApp] with light/dark themes.
 /// - [PrivacyOverlay] to protect sensitive screens in background.
 /// - Navigation to [LoginScreen].
-class PassMApp extends ConsumerWidget {
+class KeyNestApp extends ConsumerWidget {
   final AuthService authService;
   final VaultManager vaultManager;
   final TotpService totpService;
@@ -74,7 +74,7 @@ class PassMApp extends ConsumerWidget {
   final PwnedService pwnedService;
   final BiometricService biometricService;
 
-  const PassMApp({
+  const KeyNestApp({
     super.key,
     required this.authService,
     required this.vaultManager,
@@ -98,7 +98,7 @@ class PassMApp extends ConsumerWidget {
       pwnedService: pwnedService,
       biometricService: biometricService,
       child: MaterialApp(
-        title: 'Keynest',
+        title: 'KeyNest',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,

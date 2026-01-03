@@ -69,7 +69,7 @@ class _PrivacyOverlayState extends State<PrivacyOverlay> with WidgetsBindingObse
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'PassM is Secure',
+                      'KeyNest is Secure',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                   ],

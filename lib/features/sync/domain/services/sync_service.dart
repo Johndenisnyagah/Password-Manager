@@ -13,7 +13,7 @@ class SyncService {
   final String baseUrl;
 
   /// Creates a [SyncService].
-  SyncService(this._authService, {this.baseUrl = 'https://api.passm.io'});
+  SyncService(this._authService, {this.baseUrl = 'https://api.keynest.io'});
 
   /// Uploads the encrypted vault to the backend.
   ///

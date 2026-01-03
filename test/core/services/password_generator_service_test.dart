@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:passm/core/services/password_generator_service.dart';
+import 'package:keynest/core/services/password_generator_service.dart';
 
 void main() {
   late PasswordGeneratorService service;

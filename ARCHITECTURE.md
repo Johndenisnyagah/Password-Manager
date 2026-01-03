@@ -1,4 +1,4 @@
-# PassM Architecture Documentation
+# KeyNest Architecture Documentation
 
 ## Table of Contents
 - [Overview](#overview)
@@ -17,7 +17,7 @@
 
 ## Overview
 
-PassM is a cross-platform password manager built with Flutter that prioritizes security through client-side encryption and follows clean architecture principles. The application uses a feature-first modular structure with clear separation of concerns.
+KeyNest is a cross-platform password manager built with Flutter that prioritizes security through client-side encryption and follows clean architecture principles. The application uses a feature-first modular structure with clear separation of concerns.
 
 **Key Technical Characteristics:**
 - **Framework**: Flutter 3.0+ (Dart)

@@ -21,11 +21,11 @@ class SecureStorageService {
   static const String _themeKey = 'theme_mode';
   static const String _biometricsEnabledKey = 'biometrics_enabled';
   static const String _wrappedMasterKey = 'wrapped_master_key';
-  static const String _dbName = 'passm_db';
+  static const String _dbName = 'keynest_db';
   static const String _storeName = 'secure_store';
 
   // Mobile/Desktop storage
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage _secureStorage;
 
   // WARNING: Web storage (IndexedDB) is NOT as secure as native mobile secure storage (Keychain/Keystore).
   // Native storage is hardware-backed, while IndexedDB relies on browser sandboxing.
@@ -33,8 +33,9 @@ class SecureStorageService {
   // are inherently more vulnerable in a browser environment.
   Database? _db;
 
-  // Constructor
-  SecureStorageService();
+  /// Creates a [SecureStorageService].
+  SecureStorageService({FlutterSecureStorage? secureStorage})
+      : _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   /// Initializes the storage service.
   ///

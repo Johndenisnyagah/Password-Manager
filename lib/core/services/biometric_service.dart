@@ -1,7 +1,7 @@
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:passm/core/services/secure_storage_service.dart';
+import 'package:keynest/core/services/secure_storage_service.dart';
 
 /// A service class for handling biometric authentication.
 ///

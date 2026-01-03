@@ -1,19 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:passm/core/providers/service_providers.dart';
+import 'package:keynest/core/providers/service_providers.dart';
 import 'dart:ui';
 
-import 'package:passm/main.dart';
-import 'package:passm/core/services/secure_storage_service.dart';
-import 'package:passm/core/services/clipboard_service.dart';
-import 'package:passm/core/services/pwned_service.dart';
-import 'package:passm/core/services/biometric_service.dart';
-import 'package:passm/features/auth/domain/services/auth_service.dart';
-import 'package:passm/features/vault/domain/services/vault_manager.dart';
-import 'package:passm/features/totp/domain/services/totp_service.dart';
+import 'package:keynest/main.dart';
+import 'package:keynest/core/services/secure_storage_service.dart';
+import 'package:keynest/core/services/clipboard_service.dart';
+import 'package:keynest/core/services/pwned_service.dart';
+import 'package:keynest/core/services/biometric_service.dart';
+import 'package:keynest/features/auth/domain/services/auth_service.dart';
+import 'package:keynest/features/vault/domain/services/vault_manager.dart';
+import 'package:keynest/features/totp/domain/services/totp_service.dart';
 
 void main() {
-  testWidgets('App launches with login screen', (WidgetTester tester) async {
+  testWidgets('App launches with onboarding screen', (WidgetTester tester) async {
     // Initialize services for testing
     final storageService = SecureStorageService();
     final authService = AuthService();
@@ -23,7 +23,6 @@ void main() {
     final pwnedService = PwnedService();
     final biometricService = BiometricService();
 
-    // Set a large enough screen size to avoid overflow errors
     // Set a large enough screen size to avoid overflow errors
     tester.view.physicalSize = const Size(2400, 3200);
     tester.view.devicePixelRatio = 3.0;
@@ -40,7 +39,7 @@ void main() {
         biometricServiceProvider.overrideWithValue(biometricService),
         vaultManagerProvider.overrideWith((ref) => vaultManager),
       ],
-      child: PassMApp(
+      child: KeyNestApp(
         authService: authService,
         vaultManager: vaultManager,
         totpService: totpService,
@@ -51,7 +50,8 @@ void main() {
       ),
     ));
 
-    // Verify that the login screen is displayed.
-    expect(find.text('Keynest'), findsOneWidget);
+    // Verify that the onboarding/login text is displayed.
+    // The Onboarding screen likely has the app name or some Welcome text.
+    expect(find.text('KeyNest'), findsOneWidget);
   });
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:passm/features/totp/domain/services/totp_service.dart';
+import 'package:keynest/features/totp/domain/services/totp_service.dart';
 
 void main() {
   late TotpService totpService;

@@ -1,10 +1,10 @@
-# Keynest - Secure Password Manager
+# KeyNest - Secure Password Manager
 
-> 🤖 **AI-Assisted Development**: This project was developed with the assistance of GitHub Copilot AI, which helped with code generation, debugging, architecture decisions, and best practices implementation.
+> 🤖 **AI-Assisted Development**: This project was developed with the assistance of Antigravity AI, which helped with code generation, debugging, architecture decisions, and best practices implementation.
 
-A modern, secure, and hybrid password manager built with Flutter. Keynest prioritizes security with client-side encryption while offering a premium user experience with smooth animations and intuitive design.
+A modern, secure, and hybrid password manager built with Flutter. KeyNest prioritizes security with client-side encryption while offering a premium user experience with smooth animations and intuitive design.
 
-> ⚠️ **Development Status**: This project is currently in active development and is **NOT production-ready**. Use at your own risk. Do not use this as your primary password manager until a stable release is announced.
+> ⚠️ **Beta Status**: This project is functional and tested (67 tests passing) but has not undergone professional security auditing. Suitable for personal use and evaluation. Back up your data regularly using the built-in export feature.
 
 ## Features
 
@@ -12,7 +12,7 @@ A modern, secure, and hybrid password manager built with Flutter. Keynest priori
 *   **Master Password**: Zero-knowledge architecture. Your master password decrypts the vault locally; it is never stored in plain text.
 *   **Secure Registration**: Enforces strong password policies (min 8 chars, mixed case, numbers, special chars) with a real-time strength meter.
 *   **Auto-Lock**: Configurable inactivity timer blocks access (1, 5, 15, 30, 60 minutes) requiring re-authentication.
-*   **Biometric Stub**: UI support for "Coming Soon" biometric unlock (Face/Touch ID).
+*   **Biometric Unlock**: Secure Face/Touch ID integration for effortless and secure vault access.
 *   **Change Master Password**: Securely re-keys the entire vault with a new password without losing data.
 
 ### Vault Management
@@ -51,7 +51,7 @@ A modern, secure, and hybrid password manager built with Flutter. Keynest priori
     *   **Vault Data**: Encrypted JSON blob stored in local file system/preferences.
 
 ### State Management & Architecture
-*   **Dependency Injection**: `ServiceProvider` pattern for global access to `AuthService`, `VaultManager`, `StorageService`.
+*   **State Management**: Architecture powered by **Riverpod** for reactive, testable, and robust state handled through providers.
 *   **UI Architecture**: Component-based with reusable widgets (`PasswordStrengthIndicator`, `EntryTile`).
 *   **Theming**: Centralized `AppTheme` with custom color palettes (Deep Purple primary) and typography.
 
@@ -63,37 +63,38 @@ Key packages used in this project:
 | :--- | :--- |
 | `cryptography` | High-level cryptographic operations (AES-GCM, Argon2). |
 | `flutter_secure_storage` | Secure storage for sensitive keys. |
-| `provider` (implicit) | State management. |
+| `flutter_riverpod` | Reactive state management and dependency injection. |
 | `image_picker` | Selecting profile photos from gallery/camera. |
 | `lottie` | Rendering After Effects animations (JSON/Zip). |
 | `uuid` | Generating unique IDs for vault entries. |
 | `json_serializable` | JSON code generation for models. |
 
-## 📥 Installation
+## Installation
 
-### **Download Pre-built Apps**
+### **Try the Web App**
 
-**🎯 Recommended for End Users:**
+**🎯 Recommended - No Installation Required:**
 
-Visit the [**Releases Page**](https://github.com/Johndenisnyagah/Password-Manager/releases) to download the latest version for your platform:
-
-- **📱 Android**: Download `app-release.apk` 
-  - Enable "Install from Unknown Sources" in your device settings
-  - Open the APK file and follow installation prompts
-  
-- **🌐 Web App**: [**Try Keynest Online**](https://johndenisnyagah.github.io/Password-Manager/) *(Coming Soon)*
-  - No installation required - runs directly in your browser
-  - Works on any device with a modern web browser
-
-- **💻 Windows**: Download `PassM-Windows.zip` *(Coming Soon)*
-  - Extract the ZIP file
-  - Run `passm.exe`
-
-- **🍎 iOS/macOS**: Not yet available (requires Apple Developer account)
+- **🌐 Web App**: [**Launch KeyNest**](YOUR_VERCEL_URL_HERE)
+  - Runs directly in your browser - no download needed
+  - Works on any device (desktop, tablet, mobile)
+  - Data stored locally in your browser
 
 ---
 
-## 🛠️ Developer Setup (Build from Source)
+### **Native Apps** *(Coming Soon)*
+
+Native app releases are planned for future versions:
+
+- **📱 Android**: APK release planned
+- **💻 Windows**: Desktop app planned  
+- **🍎 iOS/macOS**: Release planned
+
+*For now, use the web app above - it works on all devices!*
+
+---
+
+## Developer Setup (Build from Source)
 
 ### **Prerequisites**
 - Flutter SDK 3.0+ ([Install Flutter](https://docs.flutter.dev/get-started/install))
@@ -103,8 +104,8 @@ Visit the [**Releases Page**](https://github.com/Johndenisnyagah/Password-Manage
 
 1.  **Clone the Repository**:
     ```bash
-    git clone https://github.com/Johndenisnyagah/Password-Manager.git
-    cd Password-Manager
+    git clone https://github.com/Johndenisnyagah/KeyNest.git
+    cd KeyNest
     ```
 
 2.  **Install Dependencies**:
@@ -159,16 +160,25 @@ Visit the [**Releases Page**](https://github.com/Johndenisnyagah/Password-Manage
 - **Encrypted Import/Export**: Secure JSON backups for data portability.
 
 ### Current Status
-**Version**: 1.6.0  
-**Stability**: Stable - Production Ready (Zero Lint Issues)
+**Version**: 1.7.0  
+**Stability**: Stable - Production Ready  
+**Test Coverage**: ✅ 67 tests passing
 
-### **Latest Updates** (v1.6.0 - Code Quality Release):
+### **Latest Updates** (v1.7.0 - Test Coverage Release):
+- **Comprehensive Test Suite**: 67 tests covering all core services, widgets, and integration flows.
+- **Unit Tests**: `CryptoService`, `PasswordGeneratorService`, `PasswordValidator`, `SecureStorageService`, `PwnedService`, `TotpService`, `VaultManager`.
+- **Widget Tests**: `LoginScreen`, `RegisterScreen`, `ProfileScreen`, `GeneratorScreen`, `VaultScreen`, `VaultHealthScreen`, `AddEntryScreen`, `EntryDetailScreen`.
+- **Integration Tests**: Full registration, login, entry lifecycle, and security flows.
+- **Test Infrastructure**: Mock services, `ProviderScope` overrides, and proper test isolation.
+
+### Previous Updates (v1.6.0 - Code Quality Release):
 - **Zero Lint Issues**: Comprehensive static analysis cleanup achieving `flutter analyze` with no issues.
 - **Deprecated API Migration**: Updated all `Color.withOpacity()` calls to modern `Color.withValues(alpha:)` API across 13+ files.
 - **Async Safety Audit**: Fixed `use_build_context_synchronously` violations with proper `mounted` checks and context handling.
 - **Production Logging**: Replaced `print()` statements with `debugPrint()` (auto-stripped in release builds).
 - **Dead Code Removal**: Cleaned unused variables in `VaultManager` and `ProfileScreen`.
 - **Test Environment**: Fixed widget test layout overflow issues with proper screen dimension configuration.
+
 
 ### Previous Updates (v1.5.0):
 - **Security Hardening**: Completely removed the "Password Hint" feature from the registration and profile screens to eliminate potential master password leaks.

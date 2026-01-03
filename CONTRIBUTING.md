@@ -1,8 +1,8 @@
-# Contributing to PassM
+# Contributing to KeyNest
 
-First off, thank you for considering contributing to PassM! 🎉
+First off, thank you for considering contributing to KeyNest! 🎉
 
-PassM is a security-focused password manager, and we welcome contributions from the community. Whether it's bug reports, feature suggestions, documentation improvements, or code contributions, every bit helps make PassM better and more secure.
+KeyNest is a security-focused password manager, and we welcome contributions from the community. Whether it's bug reports, feature suggestions, documentation improvements, or code contributions, every bit helps make KeyNest better and more secure.
 
 ## Table of Contents
 
@@ -42,7 +42,7 @@ When creating a bug report, include as many details as possible:
 - **Environment**:
   - OS (Windows, macOS, Linux, iOS, Android, Web)
   - Flutter version (`flutter --version`)
-  - PassM version
+  - KeyNest version
   - Device details (if mobile)
 
 **Template**:
@@ -65,7 +65,7 @@ If applicable, add screenshots.
 **Environment**
 - OS: [e.g., Windows 11, macOS 14, Android 13]
 - Flutter version: [e.g., 3.16.0]
-- PassM version: [e.g., 1.4.0]
+- KeyNest version: [e.g., 1.4.0]
 ```
 
 ### Suggesting Features
@@ -111,13 +111,13 @@ Please see [SECURITY.md](SECURITY.md) for instructions on how to responsibly dis
 
 2. **Clone your fork**:
    ```bash
-   git clone https://github.com/YOUR-USERNAME/passm.git
-   cd passm
+   git clone https://github.com/YOUR-USERNAME/keynest.git
+   cd keynest
    ```
 
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/ORIGINAL-OWNER/passm.git
+   git remote add upstream https://github.com/ORIGINAL-OWNER/keynest.git
    ```
 
 4. **Install dependencies**:
@@ -561,7 +561,7 @@ testWidgets('displays password strength indicator', (WidgetTester tester) async 
 
 ## Security Considerations
 
-When contributing to PassM, always consider security implications:
+When contributing to KeyNest, always consider security implications:
 
 ### Cryptography
 - **Never roll your own crypto**: Use established libraries
@@ -610,8 +610,8 @@ All contributors will be recognized in:
 
 ## License
 
-By contributing to PassM, you agree that your contributions will be licensed under the MIT License.
+By contributing to KeyNest, you agree that your contributions will be licensed under the MIT License.
 
 ---
 
-Thank you for contributing to PassM! Your efforts help make password management more secure and accessible for everyone. 🚀🔐
+Thank you for contributing to KeyNest! Your efforts help make password management more secure and accessible for everyone. 🚀🔐

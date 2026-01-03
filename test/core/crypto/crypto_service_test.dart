@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:passm/core/crypto/crypto_service.dart';
+import 'package:keynest/core/crypto/crypto_service.dart';
 
 void main() {
   late CryptoService cryptoService;
