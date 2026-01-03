@@ -75,7 +75,7 @@ Key packages used in this project:
 
 **🎯 Recommended - No Installation Required:**
 
-- **🌐 Web App**: [**Launch KeyNest**](YOUR_VERCEL_URL_HERE)
+- **🌐 Web App**: [**Launch KeyNest**](https://keynest-ten.vercel.app/)
   - Runs directly in your browser - no download needed
   - Works on any device (desktop, tablet, mobile)
   - Data stored locally in your browser
