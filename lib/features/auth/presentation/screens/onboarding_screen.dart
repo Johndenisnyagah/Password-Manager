@@ -29,7 +29,7 @@ class OnboardingScreen extends StatelessWidget {
                   SizedBox(
                     width: 80,
                     height: 80,
-                    child: Image.asset('assets/images/logo.png'),
+                    child: Image.asset('assets/images/logo_v2.png'),
                   ),
                   const SizedBox(height: 24),
                   // App Name
